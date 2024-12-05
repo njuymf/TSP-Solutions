@@ -1,43 +1,35 @@
-class TSP:  
-    def __init__(self, distance_matrix):  
-        self.distance_matrix = distance_matrix  # 城市间距离矩阵  
-        self.num_cities = len(distance_matrix)  # 城市数量  
-        self.best_path = None  # 最佳路径  
-        self.min_cost = float('inf')  # 初始化最小成本为无穷大  
+import numpy as np  
 
-    def backtrack(self, current_position, visited, current_cost, path):  
-        # 如果所有城市都已访问，检查是否返回起始城市的总费用  
-        if len(visited) == self.num_cities:  
-            cost_to_start = self.distance_matrix[current_position][0]  
-            total_cost = current_cost + cost_to_start  
-            if total_cost < self.min_cost:  
-                self.min_cost = total_cost  
-                self.best_path = path + [0]  # 回到起始城市  
-            return  
-        
-        # 递归访问每一个城市  
-        for next_city in range(self.num_cities):  
-            if next_city not in visited:  
-                next_cost = current_cost + self.distance_matrix[current_position][next_city]  
-                self.backtrack(next_city, visited | {next_city}, next_cost, path + [next_city])  
+# 计算贪心算法得到的路径和总距离  
+def greedy_tsp(distance_matrix):  
+    n = len(distance_matrix)  # 城市数量  
+    visit_order = [0]  # 访问顺序，从城市0开始  
+    visited = set(visit_order)  # 已访问的城市集  
+    total_distance = 0  # 总距离初始化为0  
 
-    def find_shortest_path(self):  
-        # 从起始城市（0）出发，开始回溯法  
-        self.backtrack(0, {0}, 0, [0])  
-        return self.best_path, self.min_cost  
+    # 贪心选择下一个最近的城市  
+    for _ in range(1, n):  
+        last_visited = visit_order[-1]  
+        # 找到最近的未访问城市  
+        next_city = min((distance_matrix[last_visited][j], j) for j in range(n) if j not in visited)[1]  
+        visit_order.append(next_city)  # 添加到行程中  
+        visited.add(next_city)  # 标记为已访问  
+        total_distance += distance_matrix[last_visited][next_city]  # 更新总距离  
 
+    # 回到起始城市  
+    total_distance += distance_matrix[visit_order[-1]][visit_order[0]]  
 
-# 示例距离矩阵（城市间距离）  
-distance_matrix = [  
+    return visit_order, total_distance  
+
+# 示例距离矩阵  
+distance_matrix = np.array([  
     [0, 10, 15, 20],  
     [10, 0, 35, 25],  
     [15, 35, 0, 30],  
     [20, 25, 30, 0]  
-]  
+])  
 
-# 创建TSP对象并调用方法  
-tsp = TSP(distance_matrix)  
-shortest_path, min_cost = tsp.find_shortest_path()  
+path, distance = greedy_tsp(distance_matrix)  
 
-print("最优路径:", shortest_path)  
-print("最小成本:", min_cost)
+print("访问顺序:", path)  
+print("总距离:", distance)
